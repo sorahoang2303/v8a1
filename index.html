@@ -84,7 +84,9 @@
                     <p>Số phiếu: <span id="votes-c1-5">0</span></p>
                     <button class="vote-button" onclick="vote(1, 5)">Bình chọn</button>
                 </div>
-            </div>
+            
+		</div>
+
         </section>
 
         <section>
@@ -217,14 +219,42 @@
     </footer>
 
     <script>
-        const votes = {};
+        const votes = JSON.parse(localStorage.getItem('votes')) || {};
+        const voteTimestamps = JSON.parse(localStorage.getItem('voteTimestamps')) || {};
+
+        function updateUI() {
+            for (const key in votes) {
+                const voteCountElement = document.getElementById(`votes-${key}`);
+                if (voteCountElement) {
+                    voteCountElement.textContent = votes[key];
+                }
+            }
+        }
 
         function vote(category, candidate) {
             const key = `c${category}-${candidate}`;
+            const currentTime = Date.now();
+            const lastVoteTime = voteTimestamps[key] || 0;
+            const tenMinutes = 10 * 60 * 1000;
+
+            if (currentTime - lastVoteTime < tenMinutes) {
+                const remainingTime = Math.ceil((tenMinutes - (currentTime - lastVoteTime)) / 1000);
+                alert(`Bạn cần chờ ${remainingTime} giây trước khi bình chọn lại!`);
+                return;
+            }
+
             votes[key] = (votes[key] || 0) + 1;
-            document.getElementById(`votes-${key}`).textContent = votes[key];
+            voteTimestamps[key] = currentTime;
+
+            localStorage.setItem('votes', JSON.stringify(votes));
+            localStorage.setItem('voteTimestamps', JSON.stringify(voteTimestamps));
+
+            updateUI();
             alert(`Bạn đã bình chọn cho Ứng viên ${candidate} trong Đề mục ${category}!`);
         }
+
+        // Cập nhật giao diện khi tải lại trang
+        updateUI();
     </script>
 </body>
 </html>
